@@ -90,7 +90,19 @@ class VBusClient:
 
     def start(self) -> None:
         if self._task is None or self._task.done():
-            self._task = asyncio.get_event_loop().create_task(self._run())
+            self._task = asyncio.get_running_loop().create_task(self._run())
+            self._task.add_done_callback(self._task_ended)
+            _LOGGER.info("VBus client task started for %s", self._host)
+
+    def _task_ended(self, task: asyncio.Task) -> None:
+        # The run loop should never end on its own; if it does, say so
+        # loudly — a silently dead reader is this design's worst failure.
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            self.stats["last_error"] = f"task died: {type(exc).__name__}: {exc}"
+            _LOGGER.error("VBus client task died: %s", exc, exc_info=exc)
 
     async def stop(self) -> None:
         if self._task is not None:
