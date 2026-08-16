@@ -1,0 +1,10 @@
+{
+  "domain": "resol_vbus",
+  "name": "RESOL VBus/LAN",
+  "codeowners": ["@dhardiker"],
+  "dependencies": [],
+  "documentation": "https://bitbucket.org/dhardiker/smart-red-house-resol-vbus",
+  "iot_class": "local_push",
+  "requirements": [],
+  "version": "0.1.0"
+}
