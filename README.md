@@ -74,6 +74,23 @@ The integration is built to tell you *which layer* is broken:
 3. `logger:` at `debug` for `custom_components.resol_vbus` narrates
    connection lifecycle.
 
+## Link-health entities
+
+Since 0.2.0 the device also carries diagnostic entities that read the
+client directly and **stay available through an outage** (the data
+entities go unavailable after 120 s without a packet, by design):
+
+- `VBus connected` (binary), `VBus packet age` (s), `VBus last error`;
+- counters since HA last started, as `total_increasing` so long-term
+  statistics bridge restarts: `VBus connect attempts`, `VBus bytes
+  received`, `VBus packets decoded`, `VBus header checksum failures`,
+  `VBus frame checksum failures`, `VBus foreign packets skipped`.
+
+Read them like the diagnostics download: connect attempts climbing with
+bytes flat → network/login/another client; bytes climbing with packets
+flat → framing (the checksum counters say which); packets flat with the
+session connected → the controller side of the adapter.
+
 ## Development
 
 ```sh

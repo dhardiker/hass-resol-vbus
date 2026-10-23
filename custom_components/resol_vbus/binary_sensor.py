@@ -20,11 +20,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     data = hass.data[DOMAIN]
     coordinator = data["coordinator"]
     conf = data["config"]
-    async_add_entities(
+    entities = [
         ResolBinarySensor(coordinator, conf, field)
         for field in FIELDS
         if _is_bitfield(field)
-    )
+    ]
+    entities.append(ResolConnected(data["client"], conf))
+    async_add_entities(entities, update_before_add=True)
 
 
 class ResolBinarySensor(CoordinatorEntity, BinarySensorEntity):
@@ -52,3 +54,30 @@ class ResolBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self):
         value = (self.coordinator.data or {}).get(self._field["id"])
         return None if value is None else bool(value)
+
+
+class ResolConnected(BinarySensorEntity):
+    """Whether the TCP session to the adapter is open. Polled, not
+    coordinator-bound, so it stays available through an outage."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_available = True
+    _attr_name = "VBus connected"
+
+    def __init__(self, client, conf) -> None:
+        self._client = client
+        self._attr_unique_id = f"resol_vbus_{conf['host']}_link_connected"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, conf["host"])},
+            "name": conf["name"],
+            "manufacturer": "RESOL",
+            "model": f"{DEVICE_MODEL} via VBus/LAN",
+        }
+
+    @property
+    def is_on(self):
+        return bool(self._client.connected)
+

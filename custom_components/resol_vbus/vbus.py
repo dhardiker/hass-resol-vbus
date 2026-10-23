@@ -56,6 +56,19 @@ def decode_fields(payload: bytes) -> dict[str, float]:
     return values
 
 
+# The integer counters in VBusClient.stats, in display order. The sensor
+# platform exposes each as a diagnostic entity (2026-10-24: so a flaky
+# adapter can be diagnosed from the dashboard and history, not the log).
+STAT_COUNTERS = (
+    "connect_attempts",
+    "bytes_received",
+    "packets_decoded",
+    "header_checksum_failures",
+    "frame_checksum_failures",
+    "foreign_packets_skipped",
+)
+
+
 class VBusClient:
     """Maintains the adapter connection and the latest decoded packet."""
 

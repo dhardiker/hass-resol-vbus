@@ -92,3 +92,18 @@ def test_field_table_shape(fields_mod):
             assert 0 <= offset < 64
             assert 0 < mask <= 255
             assert factor != 0
+
+
+def test_stat_counters_exist_and_count(vbus_mod, live_stream):
+    # The sensor platform exposes these as diagnostic entities; every key
+    # must exist from construction and the stream must move the right ones.
+    client = _client(vbus_mod)
+    for key in vbus_mod.STAT_COUNTERS:
+        assert key in client.stats and client.stats[key] == 0
+    client._extract_packets(bytearray(live_stream))
+    assert client.stats["packets_decoded"] >= 1
+    # Resyncing on a raw capture legitimately counts header checksum
+    # failures, so only assert the counters stay non-negative integers.
+    for key in vbus_mod.STAT_COUNTERS:
+        assert isinstance(client.stats[key], int) and client.stats[key] >= 0
+
